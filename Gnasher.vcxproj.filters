@@ -21,10 +21,13 @@
     <ClCompile Include="ProxySession.cpp">
       <Filter>Kaynak Dosyalar</Filter>
     </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>Kaynak Dosyalar</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gnasher.h">
-      <Filter>Kaynak Dosyalar</Filter>
+      <Filter>Üst Bilgi Dosyaları</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -42,13 +42,13 @@ int ProxySession::InitSession() {
 		But I'm brought to my knees by the clover
 		And it feels like, it's just the poll()en
 	*/
-	if (!WSAPoll(&pf[0], 1, 10000)) {
+	if (!WSAPoll(&pf[0], 1, 10000)) { // Wait for 10 secs for client to connect.
 		std::cout << "[System] E: Client connection timed out." << std::endl; return -2;
 	}
-	else if (pf[0].revents & POLLIN) {
+	else if (pf[0].revents & POLLIN) { // Got a connection
 		this->ends[0].s = accept(pf[0].fd, (sockaddr*)&this->ends[0].sAddr, NULL); return 0;
 	}
-	else {
+	else { // Error.
 		std::cout << "[System] E: Client connection polling failed." << std::endl; return -2;
 	}
 }

@@ -1,11 +1,16 @@
 // Includes
 #include <iostream>
 #include <string>
+#include <mutex>
+#include <thread>
 #include <stdio.h>
 #include <string.h>
 #include <WS2tcpip.h>
 #include <wolfssl/ssl.h>
 #pragma comment(lib,"ws2_32.lib")
+#include <conio.h>
+
+#define version 0.0.2
 
 struct EndpointInfo {
 	SOCKET s; WOLFSSL* ssl;
@@ -14,17 +19,31 @@ struct EndpointInfo {
 	sockaddr_in sAddr;
 };
 
-class ProxySession
-{
-public:
-	ProxySession(char* ServerTarget);
-	~ProxySession();
+class ProxySession {
+	public:
+		ProxySession(char* ServerTarget);
+		~ProxySession();
 
-	int InitSession();
-	int SessionLoop();
+		int InitSession();
+		int SessionLoop();
 
-private:
-	EndpointInfo ends[2];
+	private:
+		EndpointInfo ends[2];
 };
+
+class ClientSession {
+	public:
+		ClientSession(char* ServerTarget);
+		~ClientSession();
+
+		int InitSession();
+		int SessionLoop();
+	
+	private:
+		EndpointInfo serv; wchar_t* InputBuffer;
+		char* RecvBuffer; char* SendBufConv;
+		std::mutex ConMtx; unsigned short CurPos = 0, InputSz = 0, BufSz = 0;
+};
+
 
 #pragma once

@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ProxySession.cpp" />
   </ItemGroup>
