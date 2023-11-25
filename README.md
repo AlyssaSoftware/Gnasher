@@ -9,9 +9,10 @@ Currently implements a transparent TCP proxy and a TCP client.
 	- [ ] SSL client
 	- [ ] SSL transparent proxy (with self-trust probably)
 - [ ] UDP support (maybe not, I never used UDP)
-- [ ] Add some basic server implementations
-	- [ ] Echo server
-	- [ ] Loop server (sends something every n seconds)
+- [x] Add some basic server implementations
+	- [x] Echo server
+	- [x] Loop server (sends something every n seconds)
+	- [ ] Do polishing on server implementations.
 - [ ] Improved console support
 	- [ ] History support on client.
 - [ ] Replace placeholders with actual implementations

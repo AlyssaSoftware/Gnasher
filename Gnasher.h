@@ -3,6 +3,8 @@
 #include <string>
 #include <mutex>
 #include <thread>
+#include <vector>
+#include <deque>
 #include <stdio.h>
 #include <string.h>
 #include <WS2tcpip.h>
@@ -44,6 +46,9 @@ class ClientSession {
 		char* RecvBuffer; char* SendBufConv;
 		std::mutex ConMtx; unsigned short CurPos = 0, InputSz = 0, BufSz = 0;
 };
+
+void EchoServer();
+void LoopServer();
 
 
 #pragma once

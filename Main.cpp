@@ -12,6 +12,8 @@ int main(int argc, char** argv) {
 	for (int i = 0; i < argc; i++) {
 		if (!strcmp(argv[i], "-p")) mode = 1;
 		else if (!strcmp(argv[i], "-c")) mode = 2;
+		else if (!strcmp(argv[i], "-e")) mode = 3;
+		else if (!strcmp(argv[i], "-r")) mode = 4;
 	}
 
 	if (mode == 1) {
@@ -21,5 +23,11 @@ int main(int argc, char** argv) {
 	else if (mode == 2) {
 		ClientSession c(argv[2]);
 		if (!c.InitSession()) c.SessionLoop();
+	}
+	else if (mode == 3) {
+		EchoServer();
+	}
+	else if (mode == 4) {
+		LoopServer();
 	}
 }

@@ -38,7 +38,8 @@ int ClientSession::SessionLoop() {// This function handles the whole console int
 	SetConsoleMode(inHnd, (!ENABLE_LINE_INPUT & !ENABLE_WINDOW_INPUT & !ENABLE_MOUSE_INPUT)); // Disable cooked mode on console.
 	CONSOLE_SCREEN_BUFFER_INFO csbi; INPUT_RECORD ir[5]; pollfd pf = { serv.s,POLLIN,0 };
 	while (true) {
-		if(!WaitForSingleObject(inHnd,10)) {}
+		//if (!WaitForSingleObject(inHnd, 10)) goto PollSocket;
+		GetNumberOfConsoleInputEvents(inHnd, &readnum); if (!readnum) goto PollSocket;
 
 		if (!ReadConsoleInputW(inHnd, ir, 5, &readnum)) {
 			std::cout << "YARRAAAAAAAAAAAAAAA " << GetLastError();
@@ -109,7 +110,7 @@ EnterKey:
 					if (!CurPos) goto PollSocket; // Don't delete beyond beginning.
 					std::wcout << "\b \b";
 					if (InputBuffer[CurPos] == '\n') {//Deleted char may be the new line delimiter, which is 2 characters (\r\n)
-						InputBuffer[CurPos] = 0; InputBuffer[CurPos - 1] == 0; CurPos -= 2;
+						InputBuffer[CurPos] = 0; InputBuffer[CurPos - 1] = 0; CurPos -= 2;
 					}
 					else { 
 						InputBuffer[CurPos] = 0; CurPos--; }
@@ -128,8 +129,8 @@ EnterKey:
 	PollSocket:
 		if (WSAPoll(&pf, 1, 10)) {
 			if (pf.revents & POLLIN) {
-				int received = recv(pf.fd, RecvBuffer, 2048, 0);
-				printf("[Server] sent data (%d bytes):\n %s\n", received, RecvBuffer);
+				int received = recv(pf.fd, RecvBuffer, 2048, 0); RecvBuffer[received] = '\0';
+				printf("\r[Server] sent data (%d bytes):\n%s\n%ws", received, RecvBuffer, InputBuffer); 
 			}
 			else if (pf.revents & POLLHUP) {
 				std::wcout << "[Server] disconnected. Ending session...\n"; return 0;

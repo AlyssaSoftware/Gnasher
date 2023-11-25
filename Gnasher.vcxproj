@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Servers.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ProxySession.cpp" />
   </ItemGroup>
