@@ -12,7 +12,7 @@
 #pragma comment(lib,"ws2_32.lib")
 #include <conio.h>
 
-#define version 0.0.2
+#define version 0.2
 
 struct EndpointInfo {
 	SOCKET s; WOLFSSL* ssl;

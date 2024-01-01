@@ -13,8 +13,10 @@ Currently implements a transparent TCP proxy and a TCP client.
 	- [x] Echo server
 	- [x] Loop server (sends something every n seconds)
 	- [ ] Do polishing on server implementations.
-- [ ] Improved console support
+- [x] Improved console support
+	- [ ] *More improved* console support
 	- [ ] History support on client.
+	- [ ] Port client console to \*nix.
 - [ ] Replace placeholders with actual implementations
 - [ ] Abiity to save packets to files
 - [ ] Stress testing

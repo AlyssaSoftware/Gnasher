@@ -23,6 +23,7 @@ ClientSession::ClientSession(char* ServerTarget) {
 
 ClientSession::~ClientSession() {
 	shutdown(this->serv.s, 2); closesocket(this->serv.s);
+	delete[] this->InputBuffer; delete[] this->RecvBuffer; delete[] this->SendBufConv;
 }
 
 int ClientSession::InitSession() {
@@ -36,13 +37,13 @@ int ClientSession::SessionLoop() {// This function handles the whole console int
 	HANDLE inHnd = GetStdHandle(STD_INPUT_HANDLE); DWORD readnum;
 	HANDLE outHnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleMode(inHnd, (!ENABLE_LINE_INPUT & !ENABLE_WINDOW_INPUT & !ENABLE_MOUSE_INPUT)); // Disable cooked mode on console.
-	CONSOLE_SCREEN_BUFFER_INFO csbi; INPUT_RECORD ir[5]; pollfd pf = { serv.s,POLLIN,0 };
+	CONSOLE_SCREEN_BUFFER_INFO csbi = { 0 }; INPUT_RECORD ir[5]; pollfd pf = { serv.s,POLLIN,0 };
 	while (true) {
 		//if (!WaitForSingleObject(inHnd, 10)) goto PollSocket;
 		GetNumberOfConsoleInputEvents(inHnd, &readnum); if (!readnum) goto PollSocket;
 
 		if (!ReadConsoleInputW(inHnd, ir, 5, &readnum)) {
-			std::cout << "YARRAAAAAAAAAAAAAAA " << GetLastError();
+			std::cout << "ReadConsoleInputW  failed: " << GetLastError();
 			std::terminate();
 		}
 		//this->ConMtx.lock();
@@ -93,33 +94,59 @@ int ClientSession::SessionLoop() {// This function handles the whole console int
 						default /*Some other control key*/: break;
 					}
 				}
-				else if(ke.wVirtualKeyCode==VK_RETURN){
+				else if(ke.wVirtualKeyCode==VK_RETURN) {// ENTER key
 EnterKey:
 					//std::wcout << "\nENTER key\n"; 
 					/*memcpy(&SendBuffer[BufPos], InputBuffer, CurPos * 2); BufPos += CurPos; BufSz += CurPos;
 					memset(InputBuffer, 0, CurPos * 2); CurPos = 0;*/
 					InputBuffer[CurPos] = '\r'; InputBuffer[CurPos + 1] = '\n'; CurPos += 2;
-					std::wcout << '\n';
+					std::wcout << std::endl;
 				}
 
-				else if (ke.wVirtualKeyCode == VK_ESCAPE) {
+				else if (ke.wVirtualKeyCode == VK_ESCAPE) {// ESC key
 					//std::wcout << "\nESC key\n"; 
 				}
 
-				else if (ke.wVirtualKeyCode == VK_BACK && CurPos) {
-					if (!CurPos) goto PollSocket; // Don't delete beyond beginning.
-					std::wcout << "\b \b";
-					if (InputBuffer[CurPos] == '\n') {//Deleted char may be the new line delimiter, which is 2 characters (\r\n)
-						InputBuffer[CurPos] = 0; InputBuffer[CurPos - 1] = 0; CurPos -= 2;
+				else if (ke.wVirtualKeyCode == VK_BACK && CurPos) {// Backspace. && CurPos is for making it not delete behind buffer.
+					USHORT origPos = CurPos; CurPos--;
+					for (int x = 0; x < ke.wRepeatCount; x++) {
+						if (InputBuffer[CurPos] == '\n') {//Deleted char may be the new line delimiter, which is 2 characters (\r\n)
+							InputBuffer[CurPos] = 0;
+							if (InputBuffer[CurPos - 1] == '\r') {
+								InputBuffer[CurPos - 1] = 0; CurPos -= 2; // ke.wRepeatCount++; x++;
+							}
+							else CurPos--;
+						}
+						else {
+							InputBuffer[CurPos] = 0; CurPos--;
+						}
+					} InputSz -= ke.wRepeatCount;
+					for (int x = 0; x < ke.wRepeatCount; x++) std::wcout << "\b \b";
+					if (InputSz - 1 > CurPos) {// There's data ahead of cursor position, shift that data back as well.
+						GetConsoleScreenBufferInfo(outHnd, &csbi);
+						/*if (ke.wRepeatCount > csbi.dwCursorPosition.X) { csbi.dwCursorPosition.Y--; csbi.dwCursorPosition.X += csbi.dwSize.X; }
+						csbi.dwCursorPosition.X -= ke.wRepeatCount;
+						SetConsoleCursorPosition(outHnd, csbi.dwCursorPosition);*/
+						CurPos++; memcpy(&InputBuffer[CurPos], &InputBuffer[origPos], (InputSz - CurPos) * 2); InputBuffer[InputSz] = 0;
+						printf("%ws", &InputBuffer[CurPos]); 
+						for (int x = 0; x < ke.wRepeatCount; x++) std::wcout << " \b \b"; // Delete leftovers at end
+						SetConsoleCursorPosition(outHnd, csbi.dwCursorPosition);
 					}
-					else { 
-						InputBuffer[CurPos] = 0; CurPos--; }
 				}
 
 				else if (ke.uChar.UnicodeChar>0) {// Any other standard character.
+					if (ke.wRepeatCount > 2048 - InputSz - 1) ke.wRepeatCount = 2048 - InputSz; 
+					if (!ke.wRepeatCount) goto PollSocket; //Input buffer is full.
+					if (CurPos < InputSz - 1) {// Cursor is not at end, which means we are going to shift the buffer.
+						memcpy(&InputBuffer[CurPos + ke.wRepeatCount], &InputBuffer[CurPos], (InputSz - CurPos) * 2);
+						GetConsoleScreenBufferInfo(outHnd, &csbi);
+					}
 					for (int x = 0; x < ke.wRepeatCount; x++) {
-						std::wcout << ke.uChar.UnicodeChar;
-						InputBuffer[CurPos] = ke.uChar.UnicodeChar; CurPos++; InputSz++;
+						InputBuffer[CurPos] = ke.uChar.UnicodeChar; // We would use memset instead if it wasn't widechar.
+					}
+					printf("%ws", &InputBuffer[CurPos]); CurPos += ke.wRepeatCount; InputSz += ke.wRepeatCount;
+					if (CurPos < InputSz - 1) {// Set cursor position to where it was after printing.
+						csbi.dwCursorPosition.X++; SetConsoleCursorPosition(outHnd, csbi.dwCursorPosition);
 					}
 				}
 			}
