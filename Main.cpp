@@ -1,8 +1,12 @@
 #include "Gnasher.h"
 uint8_t mode;
+WOLFSSL_CTX* ctx=NULL;
+WOLFSSL_CTX* ctx_server=NULL;
 int main(int argc, char** argv) {
 	WSADATA wd; int wver = MAKEWORD(2, 2);
-	WSAStartup(wver, &wd);
+	if (WSAStartup(wver, &wd)) {
+		std::terminate();
+	}
 	//Set the locale and stdout to Unicode
 	fwide(stdout, 0); setlocale(LC_ALL, "");
 
@@ -14,14 +18,16 @@ int main(int argc, char** argv) {
 		else if (!strcmp(argv[i], "-c")) mode = 2;
 		else if (!strcmp(argv[i], "-e")) mode = 3;
 		else if (!strcmp(argv[i], "-r")) mode = 4;
+		else if (!strcmp(argv[i], "-sp")) mode = 5;
+		else if (!strcmp(argv[i], "-sc")) mode = 6;
 	}
 
 	if (mode == 1) {
-		ProxySession p(argv[2]); 
+		ProxySession p(argv[2],0); 
 		if (!p.InitSession()) p.SessionLoop();
 	}
 	else if (mode == 2) {
-		ClientSession c(argv[2]);
+		ClientSession c(argv[2],0);
 		if (!c.InitSession()) c.SessionLoop();
 	}
 	else if (mode == 3) {
@@ -29,5 +35,26 @@ int main(int argc, char** argv) {
 	}
 	else if (mode == 4) {
 		LoopServer();
+	}
+	else if (mode == 5) {
+		wolfSSL_Init();
+		ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+		ctx_server = wolfSSL_CTX_new(wolfSSLv23_server_method());
+		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL); wolfSSL_CTX_set_verify(ctx_server, SSL_VERIFY_NONE, NULL);
+		if (wolfSSL_CTX_use_PrivateKey_file(ctx_server, "key.key", SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			std::terminate();
+		}
+		if (wolfSSL_CTX_use_certificate_file(ctx_server, "crt.pem", SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			std::terminate();
+		}
+		ProxySession p(argv[2], 1);
+		if (!p.InitSession()) p.SessionLoop();
+	}
+	else if (mode == 6) {
+		wolfSSL_Init();
+		ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+		ClientSession c(argv[2], 1);
+		if (!c.InitSession()) c.SessionLoop();
 	}
 }

@@ -32,5 +32,13 @@
     <ClInclude Include="Gnasher.h">
       <Filter>Üst Bilgi Dosyaları</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Üst Bilgi Dosyaları</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Gnasher.rc">
+      <Filter>Kaynak Dosyaları</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

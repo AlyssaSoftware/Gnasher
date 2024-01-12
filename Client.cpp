@@ -1,6 +1,6 @@
 #include "Gnasher.h"
 
-ClientSession::ClientSession(char* ServerTarget) {
+ClientSession::ClientSession(char* ServerTarget, bool hasSSL) {
 	memset(&this->serv, 0, sizeof(this->serv)); int _ret;
 	this->serv.ipAddr = ServerTarget; this->serv.isServer = 1;
 	// Init sockets.
@@ -18,23 +18,32 @@ ClientSession::ClientSession(char* ServerTarget) {
 	this->InputBuffer = new wchar_t[2048]; memset(InputBuffer, 0, 4096);
 	this->RecvBuffer = new char[2048]; memset(RecvBuffer, 0, 2048);
 	this->SendBufConv = new char[4096]; memset(SendBufConv, 0, 4096);
+	// Set SSL
+	if (hasSSL) {
+		this->serv.ssl = wolfSSL_new(ctx); wolfSSL_set_fd(this->serv.ssl, this->serv.s);
+	}
 	return;
 }
 
 ClientSession::~ClientSession() {
 	shutdown(this->serv.s, 2); closesocket(this->serv.s);
 	delete[] this->InputBuffer; delete[] this->RecvBuffer; delete[] this->SendBufConv;
+	if (this->serv.ssl) wolfSSL_free(this->serv.ssl);
 }
 
 int ClientSession::InitSession() {
 	if (connect(this->serv.s, (sockaddr*)&this->serv.sAddr, sizeof sockaddr_in)) {
 		std::cout << "[System] E: Connection to server failed: " << WSAGetLastError() << std::endl; return -1;
 	}
+	if (wolfSSL_connect(this->serv.ssl) == -1) {
+		char error[80] = { 0 };
+		std::cout << "[System] E: SSL handshake failed: " << wolfSSL_ERR_error_string(wolfSSL_get_error(this->serv.ssl, -1),error) << std::endl; return -1;
+	}
 	return 0;
 }
 
 int ClientSession::SessionLoop() {// This function handles the whole console interface and reading data from client.
-	HANDLE inHnd = GetStdHandle(STD_INPUT_HANDLE); DWORD readnum;
+	HANDLE inHnd = GetStdHandle(STD_INPUT_HANDLE); DWORD readnum, received;
 	HANDLE outHnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleMode(inHnd, (!ENABLE_LINE_INPUT & !ENABLE_WINDOW_INPUT & !ENABLE_MOUSE_INPUT)); // Disable cooked mode on console.
 	CONSOLE_SCREEN_BUFFER_INFO csbi = { 0 }; INPUT_RECORD ir[5]; pollfd pf = { serv.s,POLLIN,0 };
@@ -85,7 +94,9 @@ int ClientSession::SessionLoop() {// This function handles the whole console int
 						{
 							int conv=WideCharToMultiByte(CP_UTF8, NULL, InputBuffer, wcslen(InputBuffer), SendBufConv, 4096, NULL, NULL);
 							if (!conv) std::wcout << GetLastError();
-							send(serv.s, SendBufConv, conv, 0); printf("[Client] sent data (%d bytes):\n %ws\n", conv, InputBuffer);
+							if (!this->serv.ssl) send(serv.s, SendBufConv, conv, 0);
+							else wolfSSL_send(this->serv.ssl, SendBufConv, conv, 0);
+							printf("[Client] sent data (%d bytes):\n %ws\n", conv, InputBuffer);
 							memset(InputBuffer, 0, wcslen(InputBuffer) * 2); CurPos = 0; InputSz = 0;
 							break;
 						}
@@ -156,7 +167,9 @@ EnterKey:
 	PollSocket:
 		if (WSAPoll(&pf, 1, 10)) {
 			if (pf.revents & POLLIN) {
-				int received = recv(pf.fd, RecvBuffer, 2048, 0); RecvBuffer[received] = '\0';
+				if (!this->serv.ssl) received = recv(pf.fd, RecvBuffer, 2048, 0);
+				else received = wolfSSL_recv(this->serv.ssl, RecvBuffer, 2048, 0);
+				RecvBuffer[received] = '\0';
 				printf("\r[Server] sent data (%d bytes):\n%s\n%ws", received, RecvBuffer, InputBuffer); 
 			}
 			else if (pf.revents & POLLHUP) {

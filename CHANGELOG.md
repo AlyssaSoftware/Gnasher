@@ -1,5 +1,9 @@
 # Gnasher Changelog
 
+## 0.3 - 12.01.2024
+- Initial SSL implementation on client and proxy.
+- Maybe more?
+
 ## 0.2 - 02.01.2024
 - Improved client implementation
 - Initial servers implementation
