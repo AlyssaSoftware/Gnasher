@@ -8,7 +8,7 @@ Currently implements a transparent TCP proxy and a TCP client.
 - [x] SSL support
 	- [x] SSL client
 	- [x] SSL transparent proxy (with self-trust probably)
-	- [ ] SSL on built-in servers.
+	- [x] SSL on built-in servers.
 - [x] Add some basic server implementations
 	- [x] Echo server
 	- [x] Loop server (sends something every n seconds)
@@ -17,9 +17,10 @@ Currently implements a transparent TCP proxy and a TCP client.
 	- [ ] *More improved* console support
 	- [ ] History support on client.
 	- [ ] Port client console to \*nix.
-- [ ] Concurrent proxy (multiple clients to single server)
+- [x] Concurrent proxy (multiple clients to single server)
 - [ ] UDP support (maybe not, I never used UDP)
 - [ ] Replace placeholders with actual implementations
 - [ ] Abiity to save packets to files
 - [ ] Stress testing
+- [ ] Implement actual CLI 
 - [ ] Last step, make sure it's ready to production.

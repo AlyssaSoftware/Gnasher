@@ -12,6 +12,7 @@
 #include <wolfssl/ssl.h>
 #pragma comment(lib,"ws2_32.lib")
 #pragma comment(lib,"wolfssl.lib")
+#pragma warning(disable:4996)
 #include <conio.h>
 
 #define version 0.3
@@ -23,16 +24,20 @@ struct EndpointInfo {
 	sockaddr_in sAddr;
 };
 
+struct ProxyEnds {// 0 is the client that connects to us, 1 is the server that we connect to.
+	EndpointInfo e[2]; 
+};
+
 class ProxySession {
 	public:
 		ProxySession(char* ServerTarget, bool hasSSL);
 		~ProxySession();
 
-		int InitSession();
 		int SessionLoop();
-
 	private:
-		EndpointInfo ends[2]; // 0 is the client that connects to us, 1 is the server that we connect to.
+		std::deque<ProxyEnds> ends;
+		EndpointInfo target, listening;
+		bool hasSSL = 0;
 };
 
 class ClientSession {
@@ -49,8 +54,8 @@ class ClientSession {
 		std::mutex ConMtx; unsigned short CurPos = 0, InputSz = 0, BufSz = 0;
 };
 
-void EchoServer();
-void LoopServer();
+void EchoServer(bool hasSSL);
+void LoopServer(bool hasSSL);
 
 extern WOLFSSL_CTX* ctx;
 extern WOLFSSL_CTX* ctx_server;

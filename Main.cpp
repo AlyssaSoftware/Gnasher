@@ -20,21 +20,23 @@ int main(int argc, char** argv) {
 		else if (!strcmp(argv[i], "-r")) mode = 4;
 		else if (!strcmp(argv[i], "-sp")) mode = 5;
 		else if (!strcmp(argv[i], "-sc")) mode = 6;
+		else if (!strcmp(argv[i], "-se")) mode = 7;
+		else if (!strcmp(argv[i], "-sr")) mode = 8;
 	}
 
 	if (mode == 1) {
 		ProxySession p(argv[2],0); 
-		if (!p.InitSession()) p.SessionLoop();
+		p.SessionLoop();
 	}
 	else if (mode == 2) {
 		ClientSession c(argv[2],0);
 		if (!c.InitSession()) c.SessionLoop();
 	}
 	else if (mode == 3) {
-		EchoServer();
+		EchoServer(0);
 	}
 	else if (mode == 4) {
-		LoopServer();
+		LoopServer(0);
 	}
 	else if (mode == 5) {
 		wolfSSL_Init();
@@ -48,7 +50,7 @@ int main(int argc, char** argv) {
 			std::terminate();
 		}
 		ProxySession p(argv[2], 1);
-		if (!p.InitSession()) p.SessionLoop();
+		p.SessionLoop();
 	}
 	else if (mode == 6) {
 		wolfSSL_Init();
@@ -56,5 +58,31 @@ int main(int argc, char** argv) {
 		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 		ClientSession c(argv[2], 1);
 		if (!c.InitSession()) c.SessionLoop();
+	}
+	else if (mode == 7) {
+		wolfSSL_Init();
+		ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+		ctx_server = wolfSSL_CTX_new(wolfSSLv23_server_method());
+		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL); wolfSSL_CTX_set_verify(ctx_server, SSL_VERIFY_NONE, NULL);
+		if (wolfSSL_CTX_use_PrivateKey_file(ctx_server, "key.key", SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			std::terminate();
+		}
+		if (wolfSSL_CTX_use_certificate_file(ctx_server, "crt.pem", SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			std::terminate();
+		}
+		EchoServer(1);
+	}
+	else if (mode == 8) {
+		wolfSSL_Init();
+		ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+		ctx_server = wolfSSL_CTX_new(wolfSSLv23_server_method());
+		wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL); wolfSSL_CTX_set_verify(ctx_server, SSL_VERIFY_NONE, NULL);
+		if (wolfSSL_CTX_use_PrivateKey_file(ctx_server, "key.key", SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			std::terminate();
+		}
+		if (wolfSSL_CTX_use_certificate_file(ctx_server, "crt.pem", SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			std::terminate();
+		}
+		LoopServer(1);
 	}
 }

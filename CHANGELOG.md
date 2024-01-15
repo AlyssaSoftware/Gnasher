@@ -1,5 +1,10 @@
 # Gnasher Changelog
 
+## 0.4 - 15.01.2024
+- Proxy implementation is now concurrent (supports proxying multiple clients to a server)
+- SSL support added to servers
+- Added more console output
+
 ## 0.3 - 12.01.2024
 - Initial SSL implementation on client and proxy.
 - Maybe more?
