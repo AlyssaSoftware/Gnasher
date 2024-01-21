@@ -1,5 +1,12 @@
 # Gnasher Changelog
 
+## 0.5 - 21.01.2024
+- Added ReverseServer support. Now you can use the console as server just like the client.
+- Added timestamps.
+- Added saving to file and initial convertion to readable txt.
+- Fixed some bugs on client console input.
+- Probably more.
+
 ## 0.4 - 15.01.2024
 - Proxy implementation is now concurrent (supports proxying multiple clients to a server)
 - SSL support added to servers

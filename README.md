@@ -12,15 +12,21 @@ Currently implements a transparent TCP proxy and a TCP client.
 - [x] Add some basic server implementations
 	- [x] Echo server
 	- [x] Loop server (sends something every n seconds)
-	- [ ] Do polishing on server implementations.
+	- [x] Client code can run as a server now.
+	- [x] ~~Do polishing on server implementations.~~ Likely not needed.
 - [x] Improved console support
 	- [ ] *More improved* console support
 	- [ ] History support on client.
 	- [ ] Port client console to \*nix.
+	- [ ] Prefixes
+	- [ ] Sending a whole file.
 - [x] Concurrent proxy (multiple clients to single server)
 - [ ] UDP support (maybe not, I never used UDP)
-- [ ] Replace placeholders with actual implementations
-- [ ] Abiity to save packets to files
+- [ ] Replace placeholders with actual implementations (is there any?)
+- [x] Abiity to save packets to files
+	- [x] Converting to human readable TXT
+	- [ ] Improvements for packets and convertions
+	- [ ] Converting to pcap (probably not)
 - [ ] Stress testing
 - [ ] Implement actual CLI 
 - [ ] Last step, make sure it's ready to production.

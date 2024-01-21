@@ -21,7 +21,8 @@ ProxySession::ProxySession(char* ServerTarget, bool hasSSL) {
 		listening.ssl = wolfSSL_new(ctx_server);
 		wolfSSL_set_fd(listening.ssl, listening.s);
 	}
-	this->hasSSL = hasSSL; return;
+	this->hasSSL = hasSSL; SessionBegin = std::chrono::system_clock::now();
+	return;
 }
 
 ProxySession::~ProxySession() {
@@ -30,63 +31,6 @@ ProxySession::~ProxySession() {
 	if (this->ends[0].ssl) wolfSSL_free(this->ends[0].ssl);
 	if (this->ends[1].ssl) wolfSSL_free(this->ends[1].ssl);*/
 }
-
-//int ProxySession::InitSession() {
-//	std::cout << "I: Waiting for a connection... " << std::endl;
-//	pollfd pf[1]; pf[0].fd = this->ends[0].s; pf->events = POLLIN;
-//	/*
-//		You point to the trail where the blossoms have fallen
-//		But all I can see is the poll()en, fucking me up
-//		Everything moves too fast but I've
-//		Been doing the same thing a thousand times over
-//		But I'm brought to my knees by the clover
-//		And it feels like, it's just the poll()en
-//	*/
-//	if (!WSAPoll(&pf[0], 1, 10000)) { // Wait for 10 secs for client to connect.
-//		std::cout << "E: Client connection timed out." << std::endl; return -2;
-//	}
-//	else if (pf[0].revents & POLLIN) { // Got a connection
-//#ifndef _WIN32
-//		unsigned int clientSize = sizeof(this->ends[0].sAddr);
-//#else
-//		int clientSize = sizeof(this->ends[0].sAddr);
-//#endif
-//		this->ends[0].s = accept(pf[0].fd, (sockaddr*)&this->ends[0].sAddr, &clientSize); wolfSSL_set_fd(this->ends[0].ssl, this->ends[0].s);
-//		if (ends[0].ssl) {// Do SSL handshake with client.
-//			if (wolfSSL_accept(ends[0].ssl) != 1) {// If fails, try again.
-//				char error[80] = { 0 };
-//				std::cout << "E: SSL handshake with client failed: " << wolfSSL_ERR_error_string(wolfSSL_get_error(this->ends[0].ssl, -1), error) << ". Trying again..." <<std::endl;
-//				if (!WSAPoll(&pf[0], 1, 1000)) goto SSLFail; // Client didn't connect again, give up.
-//
-//				this->ends[0].s = accept(pf[0].fd, (sockaddr*)&this->ends[0].sAddr, &clientSize); wolfSSL_free(this->ends[0].ssl);
-//				this->ends[0].ssl = wolfSSL_new(ctx_server); wolfSSL_set_fd(this->ends[0].ssl, this->ends[0].s);
-//
-//				if (ends[0].ssl) {// Do SSL handshake with client again.
-//					if (wolfSSL_accept(ends[0].ssl) != 1) {// Failed again, give up.
-//SSLFail:
-//						std::cout << "E: SSL handshake with client failed (attempt 2, giving up.): " << wolfSSL_ERR_error_string(wolfSSL_get_error(this->ends[0].ssl, -1), error) << std::endl; return -1;
-//					}
-//				}
-//			}
-//		}
-//		std::cout << "I: Client connected, connecting to server..." << std::endl;
-//		// Connect to server after client connects.
-//		if (connect(this->ends[1].s, (sockaddr*)&this->ends[1].sAddr, sizeof sockaddr_in)) {
-//			std::cout << "E: Connection to server failed: " << WSAGetLastError() << std::endl; return -1;
-//		}
-//		if (ends[1].ssl) {// // Do SSL handshake with server.
-//			if (wolfSSL_connect(ends[1].ssl) != 1) {
-//				char error[80] = { 0 };
-//				std::cout << "E: SSL handshake with server failed: " << wolfSSL_ERR_error_string(wolfSSL_get_error(this->ends[1].ssl, -1), error) << std::endl; return -1;
-//			}
-//		}
-//		std::cout << "I: Proxy session initiated successfully." << std::endl;
-//		return 0;
-//	}
-//	else { // Error.
-//		std::cout << "E: Client connection polling failed." << std::endl; return -2;
-//	}
-//}
 
 int ProxySession::SessionLoop() {
 	std::vector<pollfd> pf = { pollfd{listening.s,POLLIN,0} };
@@ -107,7 +51,7 @@ int ProxySession::SessionLoop() {
 			cli.s = accept(listening.s, (sockaddr*)&cli.sAddr, &clientSize);
 #pragma warning(disable:4996)
 			cli.ipAddr = inet_ntoa(cli.sAddr.sin_addr);
-			printf("I: incoming connection from %s:%d\n", cli.ipAddr, ntohs(cli.sAddr.sin_port));
+			printf("[%f] I: incoming connection from %s:%d\n", time, cli.ipAddr, ntohs(cli.sAddr.sin_port));
 			if (listening.ssl) {// Do SSL handshake with client.
 				cli.ssl = wolfSSL_new(ctx_server); wolfSSL_set_fd(cli.ssl, cli.s);
 				if (wolfSSL_accept(cli.ssl) != 1) {
@@ -120,7 +64,7 @@ int ProxySession::SessionLoop() {
 			// Connect to server.
 			srv.sAddr = target.sAddr; srv.s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (connect(srv.s, (sockaddr*)&srv.sAddr, sizeof sockaddr_in)) {
-				printf("E: connection from %s:%d to server failed: %d.\n", cli.ipAddr, ntohs(cli.sAddr.sin_port), WSAGetLastError());
+				printf("[%f] E: connection from %s:%d to server failed: %d.\n", time, cli.ipAddr, ntohs(cli.sAddr.sin_port), WSAGetLastError());
 acceptFail:
 				if(cli.ssl) { wolfSSL_free(cli.ssl); } shutdown(cli.s, 2); closesocket(cli.s); goto acceptOut;
 			}
@@ -128,12 +72,12 @@ acceptFail:
 				srv.ssl = wolfSSL_new(ctx); wolfSSL_set_fd(srv.ssl, srv.s);
 				if (wolfSSL_connect(srv.ssl) != 1) {
 					char error[80] = { 0 };
-					printf("E: SSL handshake between %s:%d and server failed: %s\n", cli.ipAddr, ntohs(cli.sAddr.sin_port),
+					printf("[%f] E: SSL handshake between %s:%d and server failed: %s\n", time, cli.ipAddr, ntohs(cli.sAddr.sin_port),
 						wolfSSL_ERR_error_string(wolfSSL_get_error(srv.ssl, -1), error)); wolfSSL_free(srv.ssl); closesocket(srv.s); goto acceptFail;
 				}
 			}
 			ends.emplace_back(client); pf.emplace_back(pollfd{ cli.s,POLLIN,0 }); pf.emplace_back(pollfd{ srv.s,POLLIN,0 });
-			printf("I: connection between %s:%d and server etablished successfully.\n", cli.ipAddr, ntohs(cli.sAddr.sin_port)); nfds += 2;
+			printf("[%f] I: connection between %s:%d and server etablished successfully.\n", time, cli.ipAddr, ntohs(cli.sAddr.sin_port)); nfds += 2;
 		}
 #undef cli
 #undef srv
@@ -148,15 +92,21 @@ acceptFail:
 					else received = recv(pf[i].fd, buf, 32767, 0); buf[received] = '\0';
 					if (received < 0) std::terminate();
 					// Send that data to other socket
-					if (i % 2) printf("I: %s:%d sent data to server (%d bytes): %s\n==end of data (%d bytes)==\n", ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port), received, buf, received);
-					else	   printf("I: server sent data to %s:%d (%d bytes): %s\n==end of data (%d bytes)==\n", ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port), received, buf, received);
+					if (i % 2) printf("[%f] I: %s:%d sent data to server (%d bytes): %s\n==end of data (%d bytes)==\n", time, ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port), received, buf, received);
+					else	   printf("[%f] I: server sent data to %s:%d (%d bytes): %s\n==end of data (%d bytes)==\n", time, ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port), received, buf, received);
 					if (this->hasSSL) wolfSSL_send(ends[(i - 1)/2].e[(i % 2) ? 1 : 0].ssl, buf, received, 0);
 					else send(ends[(i - 1) / 2].e[(i % 2) ? 1 : 0].s, buf, received, 0);
+					if (out) {
+						float amk = time;
+						memcpy(fbuf, &amk, 4); memcpy(&fbuf[4], &ends[(i - 1) / 2].e[(i % 2) ? 0 : 1].sAddr.sin_addr, 4); memcpy(&fbuf[8], &ends[(i - 1) / 2].e[(i % 2)?0:1].sAddr.sin_port, 2);
+						memcpy(&fbuf[10], &ends[(i - 1) / 2].e[(i % 2) ? 1 : 0].sAddr.sin_addr, 4); memcpy(&fbuf[14], &ends[(i - 1) / 2].e[(i % 2) ? 1 : 0].sAddr.sin_port, 2); memcpy(&fbuf[16], &received, 4);
+						swab(&fbuf[8], &fbuf[8], 2); swab(&fbuf[14], &fbuf[14], 2); fwrite(fbuf, 20, 1, out); fwrite(buf, received, 1, out); fflush(out);
+					}
 				}
 				else if (pf[i].revents & (POLLERR | POLLHUP)) {
 					//printf("%s disconnected. Ending session...\n", (i) ? "[Server]" : "[Client]");
-					if (i % 2) printf("I: %s:%d closed the connection with server\n", ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port));
-					else	   printf("I: server closed the connection with %s:%d\n", ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port));
+					if (i % 2) printf("[%f] I: %s:%d closed the connection with server\n", time,  ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port));
+					else	   printf("[%f] I: server closed the connection with %s:%d\n", time,  ends[(i - 1) / 2].e[0].ipAddr, ntohs(ends[(i - 1) / 2].e[0].sAddr.sin_port));
 					if (this->hasSSL) { wolfSSL_shutdown(ends[(i - 1) / 2].e[0].ssl); wolfSSL_free(ends[(i - 1) / 2].e[0].ssl);
 										wolfSSL_shutdown(ends[(i - 1) / 2].e[0].ssl); wolfSSL_free(ends[(i - 1) / 2].e[0].ssl); }
 					shutdown(ends[(i - 1) / 2].e[0].s, 2); closesocket(ends[(i - 1) / 2].e[0].s);

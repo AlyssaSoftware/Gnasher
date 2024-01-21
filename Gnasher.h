@@ -14,14 +14,16 @@
 #pragma comment(lib,"wolfssl.lib")
 #pragma warning(disable:4996)
 #include <conio.h>
+#include <chrono>
 
-#define version 0.3
+#define version 0.5
+#define time std::chrono::duration<float>(std::chrono::system_clock::now() - SessionBegin).count()
 
 struct EndpointInfo {
 	SOCKET s = INVALID_SOCKET; WOLFSSL* ssl = NULL;
-	bool isServer;
+	bool isServer = 0;
 	char* ipAddr = NULL;
-	sockaddr_in sAddr;
+	sockaddr_in sAddr = { 0 };
 };
 
 struct ProxyEnds {// 0 is the client that connects to us, 1 is the server that we connect to.
@@ -42,22 +44,27 @@ class ProxySession {
 
 class ClientSession {
 	public:
-		ClientSession(char* ServerTarget, bool hasSSL);
+		ClientSession(char* ServerTarget, bool hasSSL, bool amIServer);
 		~ClientSession();
 
 		int InitSession();
 		int SessionLoop();
 	
 	private:
-		EndpointInfo serv; wchar_t* InputBuffer;
+		EndpointInfo serv; wchar_t* InputBuffer; sockaddr_in me;
 		char* RecvBuffer; char* SendBufConv;
 		std::mutex ConMtx; unsigned short CurPos = 0, InputSz = 0, BufSz = 0;
 };
 
 void EchoServer(bool hasSSL);
 void LoopServer(bool hasSSL);
+int gn2txt(char* in, char* out);
 
 extern WOLFSSL_CTX* ctx;
 extern WOLFSSL_CTX* ctx_server;
+
+extern std::chrono::system_clock::time_point SessionBegin;
+extern FILE* out;
+extern char fbuf[20];
 
 #pragma once
