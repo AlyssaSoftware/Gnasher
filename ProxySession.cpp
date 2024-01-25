@@ -1,11 +1,15 @@
 #include "Gnasher.h"
 
-ProxySession::ProxySession(char* ServerTarget, bool hasSSL) {
+ProxySession::ProxySession(Params* p) {
 	int _ret;
 	// Init listening socket
+#define ServerTarget p->argv[2]
+	if (p->argc < 3) {
+		std::cout << "E: Parameter is missing. See \"" << p->argv[0] << " help\" for usage.\n"; exit(-1);
+	}
 	listening.s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	socklen_t sz = sizeof(listening.sAddr); listening.sAddr.sin_family = AF_INET;
-	listening.sAddr.sin_port = htons(666);
+	listening.sAddr.sin_port = htons(p->port);
 	_ret = inet_pton(AF_INET, "0.0.0.0", &listening.sAddr.sin_addr);
 	sz = sizeof(listening.sAddr);
 	_ret = bind(listening.s, (sockaddr*)&listening.sAddr, sz);
@@ -22,6 +26,7 @@ ProxySession::ProxySession(char* ServerTarget, bool hasSSL) {
 		wolfSSL_set_fd(listening.ssl, listening.s);
 	}
 	this->hasSSL = hasSSL; SessionBegin = std::chrono::system_clock::now();
+	printf("I: Proxy session set up successfully. Proxying port %d to %s:%d\n",p->port,ServerTarget,ntohs(target.sAddr.sin_port));
 	return;
 }
 

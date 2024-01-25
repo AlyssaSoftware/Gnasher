@@ -16,7 +16,7 @@
 #include <conio.h>
 #include <chrono>
 
-#define version 0.5
+#define version "0.6"
 #define time std::chrono::duration<float>(std::chrono::system_clock::now() - SessionBegin).count()
 
 struct EndpointInfo {
@@ -30,9 +30,14 @@ struct ProxyEnds {// 0 is the client that connects to us, 1 is the server that w
 	EndpointInfo e[2]; 
 };
 
+struct Params {
+	int argc = 0; char** argv = NULL;
+	bool hasSSL = 0; unsigned short port = 22222;
+};
+
 class ProxySession {
 	public:
-		ProxySession(char* ServerTarget, bool hasSSL);
+		ProxySession(Params* p);
 		~ProxySession();
 
 		int SessionLoop();
@@ -44,7 +49,7 @@ class ProxySession {
 
 class ClientSession {
 	public:
-		ClientSession(char* ServerTarget, bool hasSSL, bool amIServer);
+		ClientSession(Params* p, bool amIServer);
 		~ClientSession();
 
 		int InitSession();
@@ -53,11 +58,10 @@ class ClientSession {
 	private:
 		EndpointInfo serv; wchar_t* InputBuffer; sockaddr_in me;
 		char* RecvBuffer; char* SendBufConv;
-		std::mutex ConMtx; unsigned short CurPos = 0, InputSz = 0, BufSz = 0;
 };
 
-void EchoServer(bool hasSSL);
-void LoopServer(bool hasSSL);
+void EchoServer(Params* p);
+void LoopServer(Params* p);
 int gn2txt(char* in, char* out);
 
 extern WOLFSSL_CTX* ctx;
@@ -66,5 +70,10 @@ extern WOLFSSL_CTX* ctx_server;
 extern std::chrono::system_clock::time_point SessionBegin;
 extern FILE* out;
 extern char fbuf[20];
+// SSL key and certificate paths.
+extern char* sslcert;
+extern char* sslkey;
+extern char GPLLicense[];
+extern char UsageString[];
 
 #pragma once

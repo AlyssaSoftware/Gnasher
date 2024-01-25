@@ -15,11 +15,12 @@ Currently implements a transparent TCP proxy and a TCP client.
 	- [x] Client code can run as a server now.
 	- [x] ~~Do polishing on server implementations.~~ Likely not needed.
 - [x] Improved console support
-	- [ ] *More improved* console support
-	- [ ] History support on client.
+	- [x] *More improved* console support
+	- [x] History support on client.
 	- [ ] Port client console to \*nix.
-	- [ ] Prefixes
-	- [ ] Sending a whole file.
+	- [ ] Prefixes (maybe not)
+	- [x] Sending a whole file.
+	- [ ] Add abiity to clear the text and retaining the cursor position after print.
 - [x] Concurrent proxy (multiple clients to single server)
 - [ ] UDP support (maybe not, I never used UDP)
 - [ ] Replace placeholders with actual implementations (is there any?)
@@ -28,5 +29,5 @@ Currently implements a transparent TCP proxy and a TCP client.
 	- [ ] Improvements for packets and convertions
 	- [ ] Converting to pcap (probably not)
 - [ ] Stress testing
-- [ ] Implement actual CLI 
+- [x] Implement actual CLI 
 - [ ] Last step, make sure it's ready to production.

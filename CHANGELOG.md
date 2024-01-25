@@ -1,5 +1,13 @@
 # Gnasher Changelog
 
+## 0.6 - 25.01.2024
+- Implemented a proper CLI
+- Added history support to client
+- Added ability to send files to client.
+- Added commands support to client.
+- Fixed some bugs.
+- Ports are not hardcoded anymore and can be set with CLI. Default port is 22222.
+
 ## 0.5 - 21.01.2024
 - Added ReverseServer support. Now you can use the console as server just like the client.
 - Added timestamps.
