@@ -32,7 +32,7 @@ ClientSession::ClientSession(Params* p, bool amIServer) {
 		_ret = inet_pton(AF_INET, ServerTarget, &sin.sin_addr);
 		// Set SSL
 		if (p->hasSSL) {
-			this->serv.ssl = wolfSSL_new(ctx);
+			this->serv.ssl = wolfSSL_new(ctx); wolfSSL_set_fd(this->serv.ssl, this->serv.s);
 		}
 	}
 	// Allocate buffers

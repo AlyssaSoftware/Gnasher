@@ -1,7 +1,12 @@
 # Gnasher Network Development Utility
 
-Gnasher is network development utility that I plan to use myself to aid me develop my networking applications. 
+## STILL WORK IN PROGRESS - EARLY RELEASE
+Work is still not done, though it's pretty much working and usable. As it's not finished some things are missing and/or not implemented and can have bugs.
+
+Gnasher is free and open source network development utility that I plan to use myself to aid me develop my networking applications. 
 Currently implements a transparent TCP proxy and a TCP client.
+
+Gnasher is free and open source software and is licensed with GPLv3.
 
 ## Wanted for release (will be populated more, order may differ)
 - [ ] Linux support
@@ -23,7 +28,7 @@ Currently implements a transparent TCP proxy and a TCP client.
 	- [ ] Add abiity to clear the text and retaining the cursor position after print.
 - [x] Concurrent proxy (multiple clients to single server)
 - [ ] UDP support (maybe not, I never used UDP)
-- [ ] Replace placeholders with actual implementations (is there any?)
+- [x] ~~Replace placeholders with actual implementations~~ (is there any?)
 - [x] Abiity to save packets to files
 	- [x] Converting to human readable TXT
 	- [ ] Improvements for packets and convertions

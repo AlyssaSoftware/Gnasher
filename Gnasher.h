@@ -16,7 +16,7 @@
 #include <conio.h>
 #include <chrono>
 
-#define version "0.6"
+#define version "0.6.1"
 #define time std::chrono::duration<float>(std::chrono::system_clock::now() - SessionBegin).count()
 
 struct EndpointInfo {
